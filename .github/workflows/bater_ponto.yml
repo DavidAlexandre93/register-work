@@ -1,0 +1,43 @@
+name: Bater Ponto
+
+on:
+  schedule:
+    - cron: "0 9 * * 1-5"   # Executa às 09h:00, de segunda a sexta-feira
+    - cron: "0 13 * * 1-5"  # Executa às 13h:00, de segunda a sexta-feira
+    - cron: "1 14 * * 1-5"  # Executa às 14h:01, de segunda a sexta-feira
+    - cron: "0 19 * * 1-5"  # Executa às 19h:00, de segunda a sexta-feira
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest  # Executa o job no ambiente Ubuntu
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  # Faz o checkout do código do repositório
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Configura a versão do Python
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          sudo apt-get install -y google-chrome-stable  # Instala o Google Chrome
+
+      - name: Install chromedriver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')  # Captura a versão do Chrome instalada
+          wget -N https://chromedriver.storage.googleapis.com/$CHROME_VERSION/chromedriver_linux64.zip  # Baixa a versão correspondente do Chromedriver
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+
+      - name: Install dependencies
+        run: |
+          poetry install  # Instala todas as dependências do pyproject.toml
+
+      - name: Execute script
+        run: |
+          poetry run python scripts/script.py  # Executa o script usando o Poetry

@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "point-record"
+version = "0.1.0"
+description = "registration work"
+authors = ["David Alexandre Fernandes <david.dfernandes@mercadolivre.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+selenium = "^4.24.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
