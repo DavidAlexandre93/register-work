@@ -2,23 +2,23 @@ name: Bater Ponto
 
 on:
   schedule:
-    - cron: "0 9 * * 1-5"   # Executa às 09h:00, de segunda a sexta-feira
-    - cron: "0 13 * * 1-5"  # Executa às 13h:00, de segunda a sexta-feira
-    - cron: "1 14 * * 1-5"  # Executa às 14h:01, de segunda a sexta-feira
-    - cron: "0 19 * * 1-5"  # Executa às 19h:00, de segunda a sexta-feira
+    - cron: "0 12 * * 1-5"   # Executa às 09h:00 (UTC-3 convertido para UTC)
+    - cron: "0 16 * * 1-5"   # Executa às 13h:00 (UTC-3 convertido para UTC)
+    - cron: "1 17 * * 1-5"   # Executa às 14h:01 (UTC-3 convertido para UTC)
+    - cron: "0 22 * * 1-5"   # Executa às 19h:00 (UTC-3 convertido para UTC)
 
 jobs:
   run-script:
-    runs-on: ubuntu-latest  # Executa o job no ambiente Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2  # Faz o checkout do código do repositório
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'  # Configura a versão do Python
+          python-version: '3.x'
 
       - name: Install Chrome
         run: |
@@ -26,18 +26,18 @@ jobs:
           sudo apt-get install -y wget unzip
           sudo apt-get install -y google-chrome-stable  # Instala o Google Chrome
 
-      - name: Install chromedriver
+      - name: Install ChromeDriver (via latest version)
         run: |
-          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')  # Captura a versão do Chrome instalada
-          wget -N https://chromedriver.storage.googleapis.com/$CHROME_VERSION/chromedriver_linux64.zip  # Baixa a versão correspondente do Chromedriver
+          LATEST_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)  # Obtém a última versão disponível do ChromeDriver
+          wget -N https://chromedriver.storage.googleapis.com/$LATEST_VERSION/chromedriver_linux64.zip  # Baixa a versão mais recente do ChromeDriver
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
 
       - name: Install dependencies
         run: |
-          poetry install  # Instala todas as dependências do pyproject.toml
+          poetry install  # Instala as dependências listadas no pyproject.toml
 
       - name: Execute script
         run: |
-          poetry run python scripts/script.py  # Executa o script usando o Poetry
+          poetry run python scripts/script.py  # Executa o script Python

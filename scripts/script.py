@@ -1,4 +1,6 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager  # Importa o WebDriver Manager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
@@ -9,9 +11,8 @@ chrome_options.add_argument("--headless")  # Executar sem abrir o navegador
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-# Inicializa o navegador
-driver = webdriver.Chrome(options=chrome_options)
-
+# Inicializa o navegador com o WebDriver Manager
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 # Função para realizar o login e bater o ponto
 def bater_ponto():
@@ -31,11 +32,11 @@ def bater_ponto():
 
         # Preenche o código da empresa (primeiro campo)
         codigo_empresa_field = driver.find_elements(By.ID, "outlined-basic")[0]  # Primeiro campo de texto
-        codigo_empresa_field.send_keys("a382748")
+        codigo_empresa_field.send_keys("305284")
 
         # Preenche a matrícula (segundo campo)
         matricula_field = driver.find_elements(By.ID, "outlined-basic")[1]  # Segundo campo de texto
-        matricula_field.send_keys("305284")
+        matricula_field.send_keys("a382748")
 
         # Preenche a senha
         senha_field = driver.find_element(By.ID, "outlined-password")
@@ -64,7 +65,6 @@ def bater_ponto():
         print(f"Erro ao bater o ponto: {e}")
     finally:
         driver.quit()
-
 
 # Chama a função para bater o ponto
 bater_ponto()
