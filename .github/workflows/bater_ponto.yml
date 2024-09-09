@@ -20,24 +20,17 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Chrome
+      - name: Install Google Chrome
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
-          sudo apt-get install -y google-chrome-stable  # Instala o Google Chrome
-
-      - name: Install ChromeDriver (via latest version)
-        run: |
-          LATEST_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)  # Obtém a última versão disponível do ChromeDriver
-          wget -N https://chromedriver.storage.googleapis.com/$LATEST_VERSION/chromedriver_linux64.zip  # Baixa a versão mais recente do ChromeDriver
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
+          # Instala a versão mais recente do Google Chrome
+          sudo apt-get install -y google-chrome-stable
 
       - name: Install dependencies
         run: |
           poetry install  # Instala as dependências listadas no pyproject.toml
 
-      - name: Execute script
+      - name: Run Python script with WebDriver Manager
         run: |
-          poetry run python scripts/script.py  # Executa o script Python
+          poetry run python scripts/script.py  # Executa o script Python com o WebDriver Manager
