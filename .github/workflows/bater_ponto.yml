@@ -2,10 +2,10 @@ name: Bater Ponto
 
 on:
   schedule:
-    - cron: "0 12 * * 1-5"   # Executa às 09h:00 (UTC-3 convertido para UTC)
-    - cron: "0 16 * * 1-5"   # Executa às 13h:00 (UTC-3 convertido para UTC)
-    - cron: "1 17 * * 1-5"   # Executa às 14h:01 (UTC-3 convertido para UTC)
-    - cron: "0 22 * * 1-5"   # Executa às 19h:00 (UTC-3 convertido para UTC)
+    - cron: "0 12 * * 1-5"
+    - cron: "0 16 * * 1-5"
+    - cron: "1 17 * * 1-5"
+    - cron: "0 22 * * 1-5"
 
 jobs:
   run-script:
@@ -20,10 +20,17 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install Poetry
         run: |
-          pip install poetry
-          poetry install
+          pip install --upgrade pip   # Ensure pip is up-to-date
+          pip install poetry          # Install Poetry
+          echo "::add-path::$(python -m site --user-base)/bin"  # Add Poetry to PATH
+
+      - name: Verify Poetry installation
+        run: poetry --version         # Verify that Poetry is installed correctly
+
+      - name: Install dependencies
+        run: poetry install           # Install dependencies from pyproject.toml
 
       - name: Install Chrome and ChromeDriver
         run: |
