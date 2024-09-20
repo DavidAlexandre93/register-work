@@ -15,7 +15,7 @@ pipeline {
                     echo "Verificando as variáveis de ambiente..."
                     echo "COMPANY_CODE: ${COMPANY_CODE}"
                     echo "MATRICULA: ${MATRICULA}"
-                    echo "PASSWORD: ${PASSWORD}"
+                    echo "PASSWORD: ${PASSWORD}" // Evite logar senhas em ambientes de produção
                 }
             }
         }
@@ -23,7 +23,7 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 script {
-                    // Instala dependências necessárias para o Chrome e ChromeDriver
+                    // Instala dependências necessárias para o Chrome e ChromeDriver, se não existirem
                     sh '''
                     sudo apt-get update
                     sudo apt-get install -y python3 python3-pip google-chrome-stable
@@ -36,10 +36,12 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Instala o Poetry e as dependências do projeto
+                    // Instala o Poetry e as dependências do projeto, se necessário
                     sh '''
                     pip install --upgrade pip
-                    pip install poetry
+                    if ! command -v poetry &> /dev/null; then
+                        pip install poetry
+                    fi
                     poetry install
                     '''
                 }
@@ -49,12 +51,13 @@ pipeline {
         stage('Setup ChromeDriver') {
             steps {
                 script {
-                    // Baixa e instala o ChromeDriver correspondente à versão do Google Chrome
+                    // Obtém a versão compatível do ChromeDriver e instala
                     sh '''
-                    CHROME_VERSION=$(google-chrome --version | grep -oP '\\d+\\.\\d+\\.\\d+')
-                    wget -N https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip
+                    CHROME_VERSION=$(google-chrome --version | grep -oP '\\d+\\.\\d+\\.\\d+' | head -n1)
+                    CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
+                    wget -N https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
                     unzip chromedriver_linux64.zip
-                    sudo mv chromedriver /usr/bin/chromedriver
+                    sudo mv -f chromedriver /usr/bin/chromedriver
                     sudo chown root:root /usr/bin/chromedriver
                     sudo chmod +x /usr/bin/chromedriver
                     '''
@@ -80,15 +83,11 @@ pipeline {
 
     post {
         always {
-            // Usar um agente adicional para garantir que os recursos estejam disponíveis
             script {
                 echo 'Limpando recursos e arquivos temporários...'
-                try {
-                    sh 'rm -f chromedriver_linux64.zip'
-                } catch (Exception e) {
-                    echo "Erro ao limpar recursos: ${e}"
-                }
-                cleanWs() // Limpa o workspace, se possível
+                // Remoção de arquivos temporários e limpeza do workspace
+                sh 'rm -f chromedriver_linux64.zip' // Isso pode ser simplificado já que cleanWs remove todos os arquivos
+                cleanWs() // Limpa o workspace
             }
         }
         failure {
