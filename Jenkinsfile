@@ -11,10 +11,10 @@ pipeline {
         stage('Verify Environment Variables') {
             steps {
                 script {
-                    echo 'Verificando as variáveis de ambiente...'
+                    echo 'Verifying environment variables...'
                     echo 'COMPANY_CODE: ****'
                     echo 'MATRICULA: ****'
-                    echo 'PASSWORD: ****' // Nunca logar a senha
+                    echo 'PASSWORD: ****' // Never log the actual password
                 }
             }
         }
@@ -22,7 +22,7 @@ pipeline {
         stage('Prepare Environment (Windows)') {
             steps {
                 script {
-                    echo 'Preparando o ambiente para Windows...'
+                    echo 'Preparing environment for Windows...'
                 }
             }
         }
@@ -30,11 +30,16 @@ pipeline {
         stage('Fix Pip Issues') {
             steps {
                 script {
-                    // Reinstalar o pip para corrigir possíveis problemas de distribuição inválida
+                    // Reinstall pip to fix potential issues with invalid distribution
                     bat '''
                     python -m pip uninstall pip setuptools -y
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+                    
                     python -m ensurepip --upgrade
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
                     python -m pip install --upgrade pip setuptools
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     '''
                 }
             }
@@ -43,19 +48,21 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Instala o Poetry e as dependências do projeto
+                    // Install Poetry and project dependencies
                     bat '''
-                    if not exist "C:\\WINDOWS\\system32\\config\\systemprofile\\AppData\\Roaming\\Python\\Scripts\\poetry.exe" (
+                    if not exist "%APPDATA%\\Python\\Scripts\\poetry.exe" (
                         pip install poetry
+                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     )
                     '''
                     
-                    // Verifica se o arquivo pyproject.toml está presente e instala dependências
+                    // Check for pyproject.toml and install dependencies
                     bat '''
                     if exist "pyproject.toml" (
                         poetry install
+                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     ) else (
-                        echo "Arquivo pyproject.toml não encontrado!"
+                        echo "pyproject.toml not found!"
                         exit /b 1
                     )
                     '''
@@ -66,7 +73,7 @@ pipeline {
         stage('Setup ChromeDriver (Windows)') {
             steps {
                 script {
-                    // Tentar obter a versão do Chrome de HKEY_CURRENT_USER e HKEY_LOCAL_MACHINE
+                    // Attempt to get Chrome version and download the matching ChromeDriver
                     bat '''
                     setlocal EnableDelayedExpansion
                     for /f "tokens=3" %%i in ('reg query "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon" /v version 2^>nul') do set CHROME_VERSION=%%i
@@ -74,19 +81,22 @@ pipeline {
                         for /f "tokens=3" %%i in ('reg query "HKEY_LOCAL_MACHINE\\Software\\Google\\Chrome\\BLBeacon" /v version 2^>nul') do set CHROME_VERSION=%%i
                     )
                     if not defined CHROME_VERSION (
-                        echo "Google Chrome não está instalado ou não foi possível obter a versão!"
+                        echo "Google Chrome is not installed or version not found!"
                         exit /b 1
                     )
                     set CHROME_VERSION=!CHROME_VERSION:~0,-2!
                     set CHROMEDRIVER_VERSION=
                     for /f %%i in ('curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!') do set CHROMEDRIVER_VERSION=%%i
                     if not defined CHROMEDRIVER_VERSION (
-                        echo "Erro ao obter a versão do ChromeDriver!"
+                        echo "Error fetching ChromeDriver version!"
                         exit /b 1
                     )
                     curl -O https://chromedriver.storage.googleapis.com/!CHROMEDRIVER_VERSION!/chromedriver_win32.zip
                     tar.exe -xf chromedriver_win32.zip
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+                    del chromedriver_win32.zip
                     endlocal
                     '''
                 }
@@ -102,6 +112,9 @@ pipeline {
                         "PASSWORD=${PASSWORD}"
                     ]) {
                         bat 'poetry run python script.py'
+                        if (currentBuild.result == 'FAILURE') {
+                            echo 'Selenium script execution failed!'
+                        }
                     }
                 }
             }
