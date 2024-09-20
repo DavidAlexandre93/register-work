@@ -45,7 +45,7 @@ def login(driver, company_code, matricula, password):
 def registrar_ponto(driver):
     try:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='ACESSAR VIA SSO']"))).click()
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Registrar ponto']"))).click()
+        # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Registrar ponto']"))).click()
         logging.info("Ponto batido com sucesso!")
     except Exception as e:
         logging.error(f"Error during registering point: {e}")
