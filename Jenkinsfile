@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         // Use o ID correto das credenciais conforme configurado no Jenkins
-        COMPANY_CODE = credentials('COMPANY_CODE_ID')
-        MATRICULA = credentials('MATRICULA_ID')
-        PASSWORD = credentials('PASSWORD_ID')
+        COMPANY_CODE = credentials('COMPANY_CODE_ID') // Verifique se o ID das credenciais está correto
+        MATRICULA = credentials('MATRICULA_ID') // Verifique se o ID das credenciais está correto
+        PASSWORD = credentials('PASSWORD_ID') // Verifique se o ID das credenciais está correto
     }
 
     stages {
@@ -80,10 +80,16 @@ pipeline {
 
     post {
         always {
-            // Limpa recursos após a execução
-            echo 'Limpando recursos e arquivos temporários...'
-            sh 'rm -f chromedriver_linux64.zip'
-            cleanWs()
+            // Usar um agente adicional para garantir que os recursos estejam disponíveis
+            script {
+                echo 'Limpando recursos e arquivos temporários...'
+                try {
+                    sh 'rm -f chromedriver_linux64.zip'
+                } catch (Exception e) {
+                    echo "Erro ao limpar recursos: ${e}"
+                }
+                cleanWs() // Limpa o workspace, se possível
+            }
         }
         failure {
             echo 'Pipeline falhou. Verifique o log para detalhes.'
