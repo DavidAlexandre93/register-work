@@ -80,13 +80,10 @@ pipeline {
 
     post {
         always {
-            // Certifique-se de que estamos em um node antes de executar comandos de shell
-            node {
-                // Limpa recursos após a execução
-                echo 'Limpando recursos e arquivos temporários...'
-                sh 'rm -f chromedriver_linux64.zip'
-                cleanWs()
-            }
+            // Limpa recursos após a execução
+            echo 'Limpando recursos e arquivos temporários...'
+            sh 'rm -f chromedriver_linux64.zip'
+            cleanWs()
         }
         failure {
             echo 'Pipeline falhou. Verifique o log para detalhes.'
