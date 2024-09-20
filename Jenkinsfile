@@ -5,10 +5,38 @@ pipeline {
         COMPANY_CODE = credentials('COMPANY_CODE')
         MATRICULA = credentials('MATRICULA')
         PASSWORD = credentials('PASSWORD')
+        IS_HOLIDAY = 'false' // Variável para sinalizar se é feriado ou não
     }
 
     stages {
+        stage('Verificar Feriados') {
+            steps {
+                script {
+                    // Executa o script Python para verificar feriados
+                    def resultado = sh(script: 'python verificar_feriados.py', returnStatus: true)
+                    if (resultado != 0) {
+                        // Define a variável de ambiente IS_HOLIDAY como true se for feriado
+                        env.IS_HOLIDAY = 'true'
+                        echo "Hoje é feriado! O job não será executado."
+                    }
+                }
+            }
+        }
+
+        stage('Executar Job Principal') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
+            steps {
+                echo 'Executando o job principal...'
+                // Coloque aqui o seu job principal
+            }
+        }
+
         stage('Verify Environment Variables') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
             steps {
                 script {
                     echo 'Verifying environment variables...'
@@ -20,6 +48,9 @@ pipeline {
         }
 
         stage('Prepare Environment (Windows)') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
             steps {
                 script {
                     echo 'Preparing environment for Windows...'
@@ -28,6 +59,9 @@ pipeline {
         }
 
         stage('Fix Pip Issues') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
             steps {
                 script {
                     // Reinstalar o pip para corrigir possíveis problemas de distribuição inválida
@@ -46,6 +80,9 @@ pipeline {
         }
 
         stage('Install Dependencies') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
             steps {
                 script {
                     // Instalar o Poetry e as dependências do projeto
@@ -71,6 +108,9 @@ pipeline {
         }
 
         stage('Setup ChromeDriver (Windows)') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
             steps {
                 script {
                     // Tentar obter a versão do Chrome e baixar o ChromeDriver correspondente
@@ -111,6 +151,9 @@ pipeline {
         }
 
         stage('Run Selenium Script') {
+            when {
+                expression { return env.IS_HOLIDAY == 'false' }
+            }
             steps {
                 script {
                     withEnv([
