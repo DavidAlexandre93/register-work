@@ -14,7 +14,7 @@ pipeline {
                     echo 'Verifying environment variables...'
                     echo 'COMPANY_CODE: ****'
                     echo 'MATRICULA: ****'
-                    echo 'PASSWORD: ****' // Never log the actual password
+                    echo 'PASSWORD: ****' // Nunca logar a senha
                 }
             }
         }
@@ -30,11 +30,11 @@ pipeline {
         stage('Fix Pip Issues') {
             steps {
                 script {
-                    // Reinstall pip to fix potential issues with invalid distribution
+                    // Reinstalar o pip para corrigir possíveis problemas de distribuição inválida
                     bat '''
                     python -m pip uninstall pip setuptools -y
                     if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                    
+
                     python -m ensurepip --upgrade
                     if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
@@ -48,7 +48,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Install Poetry and project dependencies
+                    // Instalar o Poetry e as dependências do projeto
                     bat '''
                     if not exist "%APPDATA%\\Python\\Scripts\\poetry.exe" (
                         pip install poetry
@@ -56,13 +56,13 @@ pipeline {
                     )
                     '''
                     
-                    // Check for pyproject.toml and install dependencies
+                    // Verificar se o arquivo pyproject.toml está presente e instalar dependências
                     bat '''
                     if exist "pyproject.toml" (
                         poetry install
                         if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     ) else (
-                        echo "pyproject.toml not found!"
+                        echo "Arquivo pyproject.toml não encontrado!"
                         exit /b 1
                     )
                     '''
@@ -73,24 +73,31 @@ pipeline {
         stage('Setup ChromeDriver (Windows)') {
             steps {
                 script {
-                    // Attempt to get Chrome version and download the matching ChromeDriver
+                    // Tentar obter a versão do Chrome e baixar o ChromeDriver correspondente
                     bat '''
                     setlocal EnableDelayedExpansion
+                    set CHROME_VERSION=
+                    set CHROMEDRIVER_VERSION=
+                    
                     for /f "tokens=3" %%i in ('reg query "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon" /v version 2^>nul') do set CHROME_VERSION=%%i
                     if not defined CHROME_VERSION (
                         for /f "tokens=3" %%i in ('reg query "HKEY_LOCAL_MACHINE\\Software\\Google\\Chrome\\BLBeacon" /v version 2^>nul') do set CHROME_VERSION=%%i
                     )
                     if not defined CHROME_VERSION (
-                        echo "Google Chrome is not installed or version not found!"
-                        exit /b 1
+                        echo "Google Chrome não está instalado ou versão não encontrada!"
+                        echo "Usando versão padrão do ChromeDriver: 114.0.5735.90"
+                        set CHROMEDRIVER_VERSION=114.0.5735.90
+                    ) else (
+                        set CHROME_VERSION=!CHROME_VERSION:~0,-2!
+                        for /f %%i in ('curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!') do set CHROMEDRIVER_VERSION=%%i
                     )
-                    set CHROME_VERSION=!CHROME_VERSION:~0,-2!
-                    set CHROMEDRIVER_VERSION=
-                    for /f %%i in ('curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!') do set CHROMEDRIVER_VERSION=%%i
+
                     if not defined CHROMEDRIVER_VERSION (
-                        echo "Error fetching ChromeDriver version!"
+                        echo "Erro ao obter a versão do ChromeDriver! Saindo."
                         exit /b 1
                     )
+                    
+                    echo "Usando versão do ChromeDriver: !CHROMEDRIVER_VERSION!"
                     curl -O https://chromedriver.storage.googleapis.com/!CHROMEDRIVER_VERSION!/chromedriver_win32.zip
                     tar.exe -xf chromedriver_win32.zip
                     if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
@@ -113,7 +120,7 @@ pipeline {
                     ]) {
                         bat 'poetry run python script.py'
                         if (currentBuild.result == 'FAILURE') {
-                            echo 'Selenium script execution failed!'
+                            echo 'Falha na execução do script Selenium!'
                         }
                     }
                 }
