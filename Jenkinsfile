@@ -27,18 +27,30 @@ pipeline {
             }
         }
 
+        stage('Fix Pip Issues') {
+            steps {
+                script {
+                    // Reinstalar o pip para corrigir possíveis problemas de distribuição inválida
+                    bat '''
+                    python -m pip uninstall pip setuptools -y
+                    python -m ensurepip --upgrade
+                    python -m pip install --upgrade pip setuptools
+                    '''
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Atualizar pip corretamente no Windows
+                    // Instala o Poetry e as dependências do projeto
                     bat '''
-                    python -m pip install --upgrade pip
                     if not exist "C:\\WINDOWS\\system32\\config\\systemprofile\\AppData\\Roaming\\Python\\Scripts\\poetry.exe" (
                         pip install poetry
                     )
                     '''
                     
-                    // Instalar dependências com Poetry, garantindo que o arquivo pyproject.toml esteja presente
+                    // Verifica se o arquivo pyproject.toml está presente e instala dependências
                     bat '''
                     if exist "pyproject.toml" (
                         poetry install
@@ -54,10 +66,13 @@ pipeline {
         stage('Setup ChromeDriver (Windows)') {
             steps {
                 script {
-                    // Usar alternativa para obter a versão do Chrome
+                    // Tentar obter a versão do Chrome de HKEY_CURRENT_USER e HKEY_LOCAL_MACHINE
                     bat '''
                     setlocal EnableDelayedExpansion
-                    for /f "tokens=3" %%i in ('reg query "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon" /v version') do set CHROME_VERSION=%%i
+                    for /f "tokens=3" %%i in ('reg query "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon" /v version 2^>nul') do set CHROME_VERSION=%%i
+                    if not defined CHROME_VERSION (
+                        for /f "tokens=3" %%i in ('reg query "HKEY_LOCAL_MACHINE\\Software\\Google\\Chrome\\BLBeacon" /v version 2^>nul') do set CHROME_VERSION=%%i
+                    )
                     if not defined CHROME_VERSION (
                         echo "Google Chrome não está instalado ou não foi possível obter a versão!"
                         exit /b 1
