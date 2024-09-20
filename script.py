@@ -9,7 +9,7 @@ import time
 import logging
 import os
 
-# Logging configuration
+# Logging configurations
 logging.basicConfig(level=logging.INFO)
 
 # Load sensitive data from environment variables
