@@ -81,18 +81,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        always {
-            script {
-                echo 'Limpando recursos e arquivos temporários...'
-                // Remoção de arquivos temporários e limpeza do workspace
-                sh 'rm -f chromedriver_linux64.zip' // Remova o arquivo temporário se existir
-                cleanWs() // Limpa o workspace
-            }
-        }
-        failure {
-            echo 'Pipeline falhou. Verifique o log para detalhes.'
-        }
-    }
 }
