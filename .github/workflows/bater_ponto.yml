@@ -20,13 +20,8 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -  # Instala o Poetry
-          echo "::add-path::${HOME}/.local/bin"  # Adiciona o Poetry ao PATH
-
-      - name: Verify Poetry installation
-        run: poetry --version  # Verifica se o Poetry foi instalado corretamente
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2
 
       - name: Install Google Chrome
         run: |
