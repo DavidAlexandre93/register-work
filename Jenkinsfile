@@ -15,7 +15,8 @@ pipeline {
                     echo "Verificando as variáveis de ambiente..."
                     echo "COMPANY_CODE: ${COMPANY_CODE}"
                     echo "MATRICULA: ${MATRICULA}"
-                    echo "PASSWORD: ${PASSWORD}" // Evite logar senhas em ambientes de produção
+                    // Evite logar informações sensíveis como senhas em ambientes de produção
+                    echo "PASSWORD: ****" 
                 }
             }
         }
@@ -23,7 +24,7 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 script {
-                    // Instala dependências necessárias para o Chrome e ChromeDriver, se não existirem
+                    // Instala dependências necessárias para o Chrome e ChromeDriver
                     sh '''
                     sudo apt-get update
                     sudo apt-get install -y python3 python3-pip google-chrome-stable
@@ -36,7 +37,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Instala o Poetry e as dependências do projeto, se necessário
+                    // Instala o Poetry e as dependências do projeto
                     sh '''
                     pip install --upgrade pip
                     if ! command -v poetry &> /dev/null; then
@@ -51,7 +52,7 @@ pipeline {
         stage('Setup ChromeDriver') {
             steps {
                 script {
-                    // Obtém a versão compatível do ChromeDriver e instala
+                    // Baixa e instala o ChromeDriver correspondente à versão do Google Chrome
                     sh '''
                     CHROME_VERSION=$(google-chrome --version | grep -oP '\\d+\\.\\d+\\.\\d+' | head -n1)
                     CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
@@ -83,11 +84,14 @@ pipeline {
 
     post {
         always {
-            script {
-                echo 'Limpando recursos e arquivos temporários...'
-                // Remoção de arquivos temporários e limpeza do workspace
-                sh 'rm -f chromedriver_linux64.zip' // Isso pode ser simplificado já que cleanWs remove todos os arquivos
-                cleanWs() // Limpa o workspace
+            // Usar um agente adicional para garantir que os recursos estejam disponíveis
+            node {
+                script {
+                    echo 'Limpando recursos e arquivos temporários...'
+                    // Remoção de arquivos temporários e limpeza do workspace
+                    sh 'rm -f chromedriver_linux64.zip' // Remova o arquivo temporário se existir
+                    cleanWs() // Limpa o workspace
+                }
             }
         }
         failure {
