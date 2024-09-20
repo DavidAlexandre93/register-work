@@ -22,17 +22,7 @@ pipeline {
                 }
             }
         }
-
-        stage('Executar Job Principal') {
-            when {
-                expression { return env.IS_HOLIDAY == 'false' }
-            }
-            steps {
-                echo 'Executando o job principal...'
-                // Coloque aqui o seu job principal
-            }
-        }
-
+        
         stage('Verify Environment Variables') {
             when {
                 expression { return env.IS_HOLIDAY == 'false' }
