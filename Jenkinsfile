@@ -102,7 +102,8 @@ pipeline {
                         set CHROMEDRIVER_VERSION=114.0.5735.90
                     ) else (
                         set CHROME_VERSION=!CHROME_VERSION:~0,-2!
-                        for /f %%i in ('curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!') do set CHROMEDRIVER_VERSION=%%i
+                        echo "Obtendo a versão do ChromeDriver correspondente ao Chrome !CHROME_VERSION!"
+                        for /f %%i in ('powershell -Command "(Invoke-WebRequest -Uri https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!).Content"') do set CHROMEDRIVER_VERSION=%%i
                     )
 
                     if not defined CHROMEDRIVER_VERSION (
@@ -112,6 +113,10 @@ pipeline {
                     
                     echo "Usando versão do ChromeDriver: !CHROMEDRIVER_VERSION!"
                     curl -O https://chromedriver.storage.googleapis.com/!CHROMEDRIVER_VERSION!/chromedriver_win32.zip
+                    if %ERRORLEVEL% neq 0 (
+                        echo "Erro ao baixar o ChromeDriver!"
+                        exit /b %ERRORLEVEL%
+                    )
                     tar.exe -xf chromedriver_win32.zip
                     if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
