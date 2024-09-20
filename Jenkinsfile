@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        COMPANY_CODE = credentials('COMPANY_CODE') // Verifique se o ID das credenciais está correto
-        MATRICULA = credentials('MATRICULA') // Verifique se o ID das credenciais está correto
-        PASSWORD = credentials('PASSWORD') // Verifique se o ID das credenciais está correto
+        COMPANY_CODE = credentials('COMPANY_CODE')
+        MATRICULA = credentials('MATRICULA')
+        PASSWORD = credentials('PASSWORD')
     }
 
     stages {
@@ -22,7 +22,6 @@ pipeline {
         stage('Prepare Environment (Windows)') {
             steps {
                 script {
-                    // Instalação de dependências específicas para ambiente Windows, se necessário
                     echo 'Preparando o ambiente para Windows...'
                 }
             }
@@ -31,16 +30,23 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Verificar se Python e pip estão instalados
+                    // Atualizar pip corretamente no Windows
                     bat '''
-                    python --version
-                    pip install --upgrade pip
-                    if not exist "%APPDATA%\\Python\\Scripts\\poetry.exe" (
+                    python -m pip install --upgrade pip
+                    if not exist "C:\\WINDOWS\\system32\\config\\systemprofile\\AppData\\Roaming\\Python\\Scripts\\poetry.exe" (
                         pip install poetry
                     )
                     '''
-                    // Instalar dependências com Poetry
-                    bat 'poetry install'
+                    
+                    // Instalar dependências com Poetry, garantindo que o arquivo pyproject.toml esteja presente
+                    bat '''
+                    if exist "pyproject.toml" (
+                        poetry install
+                    ) else (
+                        echo "Arquivo pyproject.toml não encontrado!"
+                        exit /b 1
+                    )
+                    '''
                 }
             }
         }
@@ -48,13 +54,22 @@ pipeline {
         stage('Setup ChromeDriver (Windows)') {
             steps {
                 script {
-                    // Certifique-se de que o Google Chrome e o ChromeDriver estejam instalados e no PATH
+                    // Definir a versão correta do ChromeDriver e baixar
                     bat '''
-                    SET CHROME_VERSION=Google Chrome --version | findstr /R /C:"[0-9]+\\.[0-9]+\\.[0-9]+"
-                    SET CHROMEDRIVER_VERSION=curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_%CHROME_VERSION:~0,2%
-                    curl -O https://chromedriver.storage.googleapis.com/%CHROMEDRIVER_VERSION%/chromedriver_win32.zip
-                    tar -xf chromedriver_win32.zip
-                    move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
+                    setlocal EnableDelayedExpansion
+                    for /f "tokens=2 delims==" %%i in ('wmic datafile where "name='C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'" get version /value') do set CHROME_VERSION=%%i
+                    set CHROME_VERSION=!CHROME_VERSION:~0,-2!
+                    set CHROMEDRIVER_VERSION=
+                    for /f %%i in ('curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!') do set CHROMEDRIVER_VERSION=%%i
+                    if defined CHROMEDRIVER_VERSION (
+                        curl -O https://chromedriver.storage.googleapis.com/!CHROMEDRIVER_VERSION!/chromedriver_win32.zip
+                        tar.exe -xf chromedriver_win32.zip
+                        move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
+                    ) else (
+                        echo "Erro ao obter a versão do ChromeDriver!"
+                        exit /b 1
+                    )
+                    endlocal
                     '''
                 }
             }
@@ -63,7 +78,6 @@ pipeline {
         stage('Run Selenium Script') {
             steps {
                 script {
-                    // Executa o script Python com as variáveis de ambiente necessárias
                     withEnv([
                         "COMPANY_CODE=${COMPANY_CODE}",
                         "MATRICULA=${MATRICULA}",
