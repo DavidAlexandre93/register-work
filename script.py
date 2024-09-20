@@ -9,17 +9,22 @@ import time
 import logging
 import os
 
-# Logging configurations
+# Configurações de logging
 logging.basicConfig(level=logging.INFO)
 
-# Load sensitive data from environment variables
+# Carregar dados sensíveis das variáveis de ambiente ou usar valores padrão para testes
 company_code = os.getenv("COMPANY_CODE", "a382748")
 matricula = os.getenv("MATRICULA", "305284")
 password = os.getenv("PASSWORD", "@Agmtech100r")
 
+# Credenciais adicionais para o SSO
+sso_username = os.getenv("SSO_USERNAME", "davifernande")
+sso_password = os.getenv("SSO_PASSWORD", "@Mag6000r")
+
 # Configurações do navegador (Chrome neste caso)
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+# Remova o modo headless para ver a execução no navegador
+# chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
@@ -29,29 +34,94 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 # Função para realizar o login
 def login(driver, company_code, matricula, password):
     try:
-        # Acessa o site do Ahgora na página de nova batida
+        logging.info("Tentando acessar o site...")
         driver.get("https://www.ahgora.com.br/novabatidaonline/")
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Matrícula e senha']"))).click()
-        WebDriverWait(driver, 10).until(EC.visibility_of_all_elements_located((By.ID, "outlined-basic")))
+        
+        logging.info("Tentando clicar em 'Matrícula e senha'...")
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Matrícula e senha']"))).click()
+        
+        logging.info("Tentando preencher o código da empresa...")
+        WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.ID, "outlined-basic")))
         driver.find_elements(By.ID, "outlined-basic")[0].send_keys(company_code)
+        
+        logging.info("Tentando preencher a matrícula...")
         driver.find_elements(By.ID, "outlined-basic")[1].send_keys(matricula)
+        
+        logging.info("Tentando preencher a senha...")
         driver.find_element(By.ID, "outlined-password").send_keys(password)
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Liberar dispositivo']"))).click()
+        
+        logging.info("Tentando clicar em 'Liberar dispositivo'...")
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Liberar dispositivo']"))).click()
     except Exception as e:
-        logging.error(f"Error during login: {e}")
+        logging.error(f"Erro durante o login: {e}")
+        driver.save_screenshot('erro_login.png')
         raise
 
 # Função para registrar o ponto
 def registrar_ponto(driver):
     try:
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='ACESSAR VIA SSO']"))).click()
-        # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Registrar ponto']"))).click()
-        logging.info("Ponto batido com sucesso!")
+        logging.info("Iniciando registro do ponto após o login inicial")
+         
+        # Usar o XPath atualizado para localizar o botão "Registre seu ponto"
+        register_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Registre seu ponto']]"))
+        )
+        register_button.click()
+        
+        logging.info("Tentando acessar via SSO...")
+        
+        # Aguardar um pouco antes de clicar para garantir que o botão esteja disponível
+        time.sleep(5)
+        
+        # Verificar se o elemento "ACESSAR VIA SSO" está presente na página
+        sso_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//p[text()='ACESSAR VIA SSO']"))
+        )
+        
+        # Tentar clicar no botão SSO
+        sso_button.click()
+        
+        logging.info("Botão 'ACESSAR VIA SSO' clicado com sucesso!")
+        
+        # Inserir as credenciais do SSO
+        logging.info("Tentando inserir o nome de usuário do SSO...")
+        sso_username_input = WebDriverWait(driver, 20).until(
+            EC.visibility_of_element_located((By.XPATH, "//input[@name='username']"))
+        )
+        sso_username_input.send_keys(sso_username)
+        
+        logging.info("Tentando inserir a senha do SSO...")
+        sso_password_input = WebDriverWait(driver, 20).until(
+            EC.visibility_of_element_located((By.XPATH, "//input[@name='password']"))
+        )
+        sso_password_input.send_keys(sso_password)
+        
+        logging.info("Tentando clicar no botão de login do SSO...")
+        sso_login_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[@id='1-submit']"))
+        )
+        sso_login_button.click()
+        
+        logging.info("Login SSO realizado com sucesso!")
+
+        # Aguardar 10 segundos para garantir que o login foi processado
+        time.sleep(10)
+        
+        # Verificar e clicar no botão "Registrar ponto"
+        logging.info("Verificando se o botão 'Registrar ponto' está presente...")
+        # registrar_ponto_button = WebDriverWait(driver, 20).until(
+        #     EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Registrar ponto']]"))
+        # )
+        # registrar_ponto_button.click()
+        
+        logging.info("Ponto registrado com sucesso!")
+        
     except Exception as e:
-        logging.error(f"Error during registering point: {e}")
+        logging.error(f"Erro ao registrar o ponto: {e}")
+        driver.save_screenshot('erro_ponto.png')
         raise
 
-# Chama a função para bater o ponto nos determinados horarios registrados
+# Chama a função para bater o ponto nos determinados horários registrados
 def bater_ponto():
     try:
         login(driver, company_code, matricula, password)
