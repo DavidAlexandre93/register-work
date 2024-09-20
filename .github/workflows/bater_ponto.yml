@@ -20,8 +20,18 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v2
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -  # Instala o Poetry
+          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV  # Adiciona o Poetry ao PATH para todo o job
+        shell: bash
+
+      - name: Add Poetry to PATH
+        # Certifica-se de que o caminho seja atualizado
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify Poetry installation
+        run: ~/.local/bin/poetry --version  # Verifica se o Poetry foi instalado corretamente
 
       - name: Install Google Chrome
         run: |
@@ -40,8 +50,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install  # Instala as dependências listadas no pyproject.toml
+          ~/.local/bin/poetry install  # Instala as dependências listadas no pyproject.toml
 
       - name: Run Python script with WebDriver Manager
         run: |
-          poetry run python scripts/script.py  # Executa o script Python com o WebDriver Manager
+          ~/.local/bin/poetry run python scripts/script.py  # Executa o script Python com o WebDriver Manager
