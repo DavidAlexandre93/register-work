@@ -51,7 +51,7 @@ def registrar_ponto(driver):
         logging.error(f"Error during registering point: {e}")
         raise
 
-# Chama a função para bater o ponto
+# Chama a função para bater o ponto nos determinados horarios registrados
 def bater_ponto():
     try:
         login(driver, company_code, matricula, password)
