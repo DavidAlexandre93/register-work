@@ -54,21 +54,24 @@ pipeline {
         stage('Setup ChromeDriver (Windows)') {
             steps {
                 script {
-                    // Definir a versão correta do ChromeDriver e baixar
+                    // Usar alternativa para obter a versão do Chrome
                     bat '''
                     setlocal EnableDelayedExpansion
-                    for /f "tokens=2 delims==" %%i in ('wmic datafile where "name='C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'" get version /value') do set CHROME_VERSION=%%i
+                    for /f "tokens=3" %%i in ('reg query "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon" /v version') do set CHROME_VERSION=%%i
+                    if not defined CHROME_VERSION (
+                        echo "Google Chrome não está instalado ou não foi possível obter a versão!"
+                        exit /b 1
+                    )
                     set CHROME_VERSION=!CHROME_VERSION:~0,-2!
                     set CHROMEDRIVER_VERSION=
                     for /f %%i in ('curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!') do set CHROMEDRIVER_VERSION=%%i
-                    if defined CHROMEDRIVER_VERSION (
-                        curl -O https://chromedriver.storage.googleapis.com/!CHROMEDRIVER_VERSION!/chromedriver_win32.zip
-                        tar.exe -xf chromedriver_win32.zip
-                        move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
-                    ) else (
+                    if not defined CHROMEDRIVER_VERSION (
                         echo "Erro ao obter a versão do ChromeDriver!"
                         exit /b 1
                     )
+                    curl -O https://chromedriver.storage.googleapis.com/!CHROMEDRIVER_VERSION!/chromedriver_win32.zip
+                    tar.exe -xf chromedriver_win32.zip
+                    move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
                     endlocal
                     '''
                 }
