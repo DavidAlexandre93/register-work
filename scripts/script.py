@@ -13,8 +13,8 @@ import os
 logging.basicConfig(level=logging.INFO)
 
 # Load sensitive data from environment variables
-company_code = os.getenv("COMPANY_CODE", "305284")
-matricula = os.getenv("MATRICULA", "a382748")
+company_code = os.getenv("COMPANY_CODE", "a382748")
+matricula = os.getenv("MATRICULA", "305284")
 password = os.getenv("PASSWORD", "@Agmtech100r")
 
 # Configurações do navegador (Chrome neste caso)
