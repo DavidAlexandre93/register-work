@@ -68,7 +68,7 @@ def registrar_ponto(driver):
         )
         register_button.click()
         
-        logging.info("Tentando acessar via SSO...")
+        logging.info("Tentando acessar via Matricula e Senha...")
 
         # Aguardar um pouco antes de clicar para garantir que o botão esteja disponível
         time.sleep(5)
@@ -94,7 +94,7 @@ def registrar_ponto(driver):
         )
         sso_login_button.click()
         
-        logging.info("Login SSO realizado com sucesso!")
+        logging.info("Login realizado com sucesso!")
 
         # Aguardar 10 segundos para garantir que o login foi processado
         time.sleep(10)
