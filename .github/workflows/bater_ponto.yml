@@ -22,15 +22,19 @@ jobs:
 
       - name: Install Poetry
         run: |
-          pip install --upgrade pip   # Ensure pip is up-to-date
+          pip install --upgrade pip   # Upgrade pip to the latest version
           pip install poetry          # Install Poetry
-          echo "::add-path::$(python -m site --user-base)/bin"  # Add Poetry to PATH
+          # Add Poetry to PATH
+          echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+          echo "POETRY_HOME=$(poetry config virtualenvs.path)" >> $GITHUB_ENV
 
       - name: Verify Poetry installation
         run: poetry --version         # Verify that Poetry is installed correctly
 
       - name: Install dependencies
         run: poetry install           # Install dependencies from pyproject.toml
+        env:
+          POETRY_HOME: ${{ env.POETRY_HOME }}
 
       - name: Install Chrome and ChromeDriver
         run: |
