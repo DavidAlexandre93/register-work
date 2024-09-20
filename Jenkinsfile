@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         // Use o ID correto das credenciais conforme configurado no Jenkins
-        COMPANY_CODE = credentials('COMPANY_CODE_ID') // Verifique se o ID das credenciais está correto
-        MATRICULA = credentials('MATRICULA_ID') // Verifique se o ID das credenciais está correto
-        PASSWORD = credentials('PASSWORD_ID') // Verifique se o ID das credenciais está correto
+        COMPANY_CODE = credentials('COMPANY_CODE') // Verifique se o ID das credenciais está correto
+        MATRICULA = credentials('MATRICULA') // Verifique se o ID das credenciais está correto
+        PASSWORD = credentials('PASSWORD') // Verifique se o ID das credenciais está correto
     }
 
     stages {
