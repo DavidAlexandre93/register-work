@@ -2,13 +2,24 @@ pipeline {
     agent any
 
     environment {
-        // Utiliza as credenciais armazenadas no Jenkins
+        // Use o ID correto das credenciais conforme configurado no Jenkins
         COMPANY_CODE = credentials('COMPANY_CODE_ID')
         MATRICULA = credentials('MATRICULA_ID')
         PASSWORD = credentials('PASSWORD_ID')
     }
 
     stages {
+        stage('Verify Environment Variables') {
+            steps {
+                script {
+                    echo "Verificando as variáveis de ambiente..."
+                    echo "COMPANY_CODE: ${COMPANY_CODE}"
+                    echo "MATRICULA: ${MATRICULA}"
+                    echo "PASSWORD: ${PASSWORD}"
+                }
+            }
+        }
+
         stage('Prepare Environment') {
             steps {
                 script {
@@ -56,11 +67,11 @@ pipeline {
                 script {
                     // Executa o script Python com as variáveis de ambiente necessárias
                     withEnv([
-                        "COMPANY_CODE=${env.COMPANY_CODE}",
-                        "MATRICULA=${env.MATRICULA}",
-                        "PASSWORD=${env.PASSWORD}"
+                        "COMPANY_CODE=${COMPANY_CODE}",
+                        "MATRICULA=${MATRICULA}",
+                        "PASSWORD=${PASSWORD}"
                     ]) {
-                        sh 'poetry run python scripts/script.py'
+                        sh 'poetry run python script.py'
                     }
                 }
             }
@@ -69,12 +80,15 @@ pipeline {
 
     post {
         always {
-            // Limpa recursos após a execução
-            sh 'rm -f chromedriver_linux64.zip'
-            cleanWs()
+            // Certifique-se de que estamos em um node antes de executar comandos de shell
+            node {
+                // Limpa recursos após a execução
+                echo 'Limpando recursos e arquivos temporários...'
+                sh 'rm -f chromedriver_linux64.zip'
+                cleanWs()
+            }
         }
         failure {
-            // Notifica em caso de falha
             echo 'Pipeline falhou. Verifique o log para detalhes.'
         }
     }
