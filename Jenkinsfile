@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Use o ID correto das credenciais conforme configurado no Jenkins
         COMPANY_CODE = credentials('COMPANY_CODE') // Verifique se o ID das credenciais está correto
         MATRICULA = credentials('MATRICULA') // Verifique se o ID das credenciais está correto
         PASSWORD = credentials('PASSWORD') // Verifique se o ID das credenciais está correto
@@ -12,24 +11,19 @@ pipeline {
         stage('Verify Environment Variables') {
             steps {
                 script {
-                    echo "Verificando as variáveis de ambiente..."
-                    echo "COMPANY_CODE: ${COMPANY_CODE}"
-                    echo "MATRICULA: ${MATRICULA}"
-                    // Evite logar informações sensíveis como senhas em ambientes de produção
-                    echo "PASSWORD: ****" 
+                    echo 'Verificando as variáveis de ambiente...'
+                    echo 'COMPANY_CODE: ****'
+                    echo 'MATRICULA: ****'
+                    echo 'PASSWORD: ****' // Nunca logar a senha
                 }
             }
         }
 
-        stage('Prepare Environment') {
+        stage('Prepare Environment (Windows)') {
             steps {
                 script {
-                    // Instala dependências necessárias para o Chrome e ChromeDriver
-                    sh '''
-                    sudo apt-get update
-                    sudo apt-get install -y python3 python3-pip google-chrome-stable
-                    sudo apt-get install -y wget unzip
-                    '''
+                    // Instalação de dependências específicas para ambiente Windows, se necessário
+                    echo 'Preparando o ambiente para Windows...'
                 }
             }
         }
@@ -37,30 +31,30 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Instala o Poetry e as dependências do projeto
-                    sh '''
+                    // Verificar se Python e pip estão instalados
+                    bat '''
+                    python --version
                     pip install --upgrade pip
-                    if ! command -v poetry &> /dev/null; then
+                    if not exist "%APPDATA%\\Python\\Scripts\\poetry.exe" (
                         pip install poetry
-                    fi
-                    poetry install
+                    )
                     '''
+                    // Instalar dependências com Poetry
+                    bat 'poetry install'
                 }
             }
         }
 
-        stage('Setup ChromeDriver') {
+        stage('Setup ChromeDriver (Windows)') {
             steps {
                 script {
-                    // Baixa e instala o ChromeDriver correspondente à versão do Google Chrome
-                    sh '''
-                    CHROME_VERSION=$(google-chrome --version | grep -oP '\\d+\\.\\d+\\.\\d+' | head -n1)
-                    CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
-                    wget -N https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
-                    unzip chromedriver_linux64.zip
-                    sudo mv -f chromedriver /usr/bin/chromedriver
-                    sudo chown root:root /usr/bin/chromedriver
-                    sudo chmod +x /usr/bin/chromedriver
+                    // Certifique-se de que o Google Chrome e o ChromeDriver estejam instalados e no PATH
+                    bat '''
+                    SET CHROME_VERSION=Google Chrome --version | findstr /R /C:"[0-9]+\\.[0-9]+\\.[0-9]+"
+                    SET CHROMEDRIVER_VERSION=curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_%CHROME_VERSION:~0,2%
+                    curl -O https://chromedriver.storage.googleapis.com/%CHROMEDRIVER_VERSION%/chromedriver_win32.zip
+                    tar -xf chromedriver_win32.zip
+                    move /Y chromedriver.exe C:\\Windows\\System32\\chromedriver.exe
                     '''
                 }
             }
@@ -75,7 +69,7 @@ pipeline {
                         "MATRICULA=${MATRICULA}",
                         "PASSWORD=${PASSWORD}"
                     ]) {
-                        sh 'poetry run python script.py'
+                        bat 'poetry run python script.py'
                     }
                 }
             }
