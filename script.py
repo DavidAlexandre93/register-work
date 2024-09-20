@@ -69,36 +69,28 @@ def registrar_ponto(driver):
         register_button.click()
         
         logging.info("Tentando acessar via SSO...")
-        
+
         # Aguardar um pouco antes de clicar para garantir que o botão esteja disponível
         time.sleep(5)
         
-        # Verificar se o elemento "ACESSAR VIA SSO" está presente na página
-        sso_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//p[text()='ACESSAR VIA SSO']"))
-        )
-        
-        # Tentar clicar no botão SSO
-        sso_button.click()
-        
-        logging.info("Botão 'ACESSAR VIA SSO' clicado com sucesso!")
-        
         # Inserir as credenciais do SSO
-        logging.info("Tentando inserir o nome de usuário do SSO...")
+        logging.info("Tentando inserir a matrícula.")
         sso_username_input = WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//input[@name='username']"))
+            EC.visibility_of_element_located((By.XPATH, "//input[@id='outlined-basic-account']"))
         )
+        sso_username_input.clear()
         sso_username_input.send_keys(sso_username)
         
-        logging.info("Tentando inserir a senha do SSO...")
+        logging.info("Tentando inserir a senha.")
         sso_password_input = WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//input[@name='password']"))
+            EC.visibility_of_element_located((By.XPATH, "//input[@id='outlined-basic-password']"))
         )
+        sso_password_input.clear()
         sso_password_input.send_keys(sso_password)
         
-        logging.info("Tentando clicar no botão de login do SSO...")
+        logging.info("Tentando clicar no botão 'Avançar'.")
         sso_login_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[@id='1-submit']"))
+            EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Avançar']]"))
         )
         sso_login_button.click()
         
