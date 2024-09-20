@@ -104,6 +104,11 @@ pipeline {
                         set CHROME_VERSION=!CHROME_VERSION:~0,-2!
                         echo "Obtendo a versão do ChromeDriver correspondente ao Chrome !CHROME_VERSION!"
                         for /f %%i in ('powershell -Command "(Invoke-WebRequest -Uri https://chromedriver.storage.googleapis.com/LATEST_RELEASE_!CHROME_VERSION!).Content"') do set CHROMEDRIVER_VERSION=%%i
+
+                        if not defined CHROMEDRIVER_VERSION (
+                            echo "Versão específica não encontrada. Obtendo versão mais próxima do ChromeDriver."
+                            for /f %%i in ('powershell -Command "(Invoke-WebRequest -Uri https://chromedriver.storage.googleapis.com/LATEST_RELEASE).Content"') do set CHROMEDRIVER_VERSION=%%i
+                        )
                     )
 
                     if not defined CHROMEDRIVER_VERSION (
