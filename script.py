@@ -41,6 +41,8 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando acessar o site...")
         driver.get("https://www.ahgora.com.br/novabatidaonline/")
         
+        driver.save_screenshot('página.png')
+        
         logging.info("Tentando clicar em 'Matrícula e senha'...")
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Matrícula e senha']"))).click()
         
@@ -54,6 +56,8 @@ def login(driver, company_code, matricula, password):
         
         logging.info("Tentando preencher a senha...")
         driver.find_element(By.ID, "outlined-password").send_keys(password)
+        
+        driver.save_screenshot('matrica_senha_preenchidos.png')
         
         logging.info("Esperando carregar a página...")
         time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
