@@ -46,6 +46,7 @@ def login(driver, company_code, matricula, password):
         
         logging.info("Tentando preencher o código da empresa...")
         WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.ID, "outlined-basic")))
+
         driver.find_elements(By.ID, "outlined-basic")[0].send_keys(company_code)
         
         logging.info("Tentando preencher a matrícula...")
@@ -54,16 +55,17 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando preencher a senha...")
         driver.find_element(By.ID, "outlined-password").send_keys(password)
         
-        logging.info("Tentando clicar em 'Liberar dispositivo'...")
-        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Liberar dispositivo']"))).click()
+        logging.info("Esperando carregar a página...")
+        time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
         
-        # Aguardar um pouco depois de clicar para garantir o carregamento da tela
-        time.sleep(5)
+        logging.info("Tentando clicar em 'Liberar dispositivo'...")
+        WebDriverWait(driver, 40).until(
+            EC.element_to_be_clickable((By.XPATH, "//p[contains(text(), 'Liberar dispositivo')]"))
+        ).click()
         
     except Exception as e:
         logging.error(f"Erro durante o login: {e}")
-        logging.error(traceback.format_exc())  # Adicionar traceback detalhado ao log
-        driver.save_screenshot('erro_login.png')  # Capturar screenshot do erro
+        driver.save_screenshot('erro_login.png')
         raise
 
 # Função para registrar o ponto
