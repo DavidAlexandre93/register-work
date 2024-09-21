@@ -52,6 +52,10 @@ def login(driver, company_code, matricula, password):
         
         logging.info("Tentando clicar em 'Liberar dispositivo'...")
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Liberar dispositivo']"))).click()
+        
+         # Aguardar um pouco depois de clicar para garantir o carregamento da tela
+        time.sleep(5)
+        
     except Exception as e:
         logging.error(f"Erro durante o login: {e}")
         driver.save_screenshot('erro_login.png')
