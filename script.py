@@ -8,9 +8,10 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import logging
 import os
+import traceback
 
 # Configurações de logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Carregar dados sensíveis das variáveis de ambiente ou usar valores padrão para testes
 company_code = os.getenv("COMPANY_CODE", "a382748")
@@ -18,15 +19,18 @@ matricula = os.getenv("MATRICULA", "305284")
 password = os.getenv("PASSWORD", "@Agmtech100r")
 
 # Credenciais adicionais para o SSO
-sso_username = os.getenv("SSO_USERNAME", "davifernande")
-sso_password = os.getenv("SSO_PASSWORD", "@Mag6000r")
+sso_username = os.getenv("SSO_USERNAME", "305284")
+sso_password = os.getenv("SSO_PASSWORD", "@Agmtech100r")
 
 # Configurações do navegador (Chrome neste caso)
 chrome_options = Options()
-# Remova o modo headless para ver a execução no navegador
+# Remover o modo headless para usar a interface gráfica
 # chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
+chrome_options.add_argument('--disable-infobars')  # Desativar barras de informação do Chrome
+chrome_options.add_argument('--disable-extensions')  # Desativar extensões do Chrome
+chrome_options.add_argument('--disable-notifications')  # Desativar notificações
 
 # Inicializa o navegador com o WebDriver Manager
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -53,12 +57,13 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando clicar em 'Liberar dispositivo'...")
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Liberar dispositivo']"))).click()
         
-         # Aguardar um pouco depois de clicar para garantir o carregamento da tela
+        # Aguardar um pouco depois de clicar para garantir o carregamento da tela
         time.sleep(5)
         
     except Exception as e:
         logging.error(f"Erro durante o login: {e}")
-        driver.save_screenshot('erro_login.png')
+        logging.error(traceback.format_exc())  # Adicionar traceback detalhado ao log
+        driver.save_screenshot('erro_login.png')  # Capturar screenshot do erro
         raise
 
 # Função para registrar o ponto
@@ -114,7 +119,8 @@ def registrar_ponto(driver):
         
     except Exception as e:
         logging.error(f"Erro ao registrar o ponto: {e}")
-        driver.save_screenshot('erro_ponto.png')
+        logging.error(traceback.format_exc())  # Adicionar traceback detalhado ao log
+        driver.save_screenshot('erro_ponto.png')  # Capturar screenshot do erro
         raise
 
 # Chama a função para bater o ponto nos determinados horários registrados
