@@ -63,8 +63,8 @@ def login(driver, company_code, matricula, password):
         time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
         
         logging.info("Tentando clicar em 'Liberar dispositivo'...")
-        WebDriverWait(driver, 40).until(
-            EC.element_to_be_clickable((By.XPATH, "//p[contains(text(), 'Liberar dispositivo')]"))
+        WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
         ).click()
         
     except Exception as e:
