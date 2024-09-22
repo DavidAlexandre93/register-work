@@ -1,8 +1,14 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
@@ -17,23 +23,39 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 company_code = os.getenv("COMPANY_CODE", "a382748")
 matricula = os.getenv("MATRICULA", "305284")
 password = os.getenv("PASSWORD", "@Agmtech100r")
+browser = os.getenv("BROWSER", "chrome").lower()  # Seleciona o navegador a partir da variável de ambiente, padrão é "chrome"
 
 # Credenciais adicionais para o SSO
 sso_username = os.getenv("SSO_USERNAME", "305284")
 sso_password = os.getenv("SSO_PASSWORD", "@Agmtech100r")
 
-# Configurações do navegador (Chrome neste caso)
-chrome_options = Options()
-# Remover o modo headless para usar a interface gráfica
-# chrome_options.add_argument("--headless")
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
-chrome_options.add_argument('--disable-infobars')  # Desativar barras de informação do Chrome
-chrome_options.add_argument('--disable-extensions')  # Desativar extensões do Chrome
-chrome_options.add_argument('--disable-notifications')  # Desativar notificações
-
-# Inicializa o navegador com o WebDriver Manager
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+# Função para inicializar o WebDriver com base no navegador selecionado
+def get_driver(browser):
+    if browser == "chrome":
+        logging.info("Inicializando o Chrome WebDriver...")
+        chrome_options = ChromeOptions()
+        # chrome_options.add_argument("--headless") # Usar se quiser rodar em modo headless
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-infobars')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-notifications')
+        return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+    
+    elif browser == "firefox":
+        logging.info("Inicializando o Firefox WebDriver...")
+        firefox_options = FirefoxOptions()
+        # firefox_options.add_argument("--headless") # Usar se quiser rodar em modo headless
+        return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
+    
+    elif browser == "edge":
+        logging.info("Inicializando o Edge WebDriver...")
+        edge_options = EdgeOptions()
+        # edge_options.add_argument("--headless") # Usar se quiser rodar em modo headless
+        return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=edge_options)
+    
+    else:
+        raise ValueError(f"Navegador '{browser}' não suportado! Use 'chrome', 'firefox' ou 'edge'.")
 
 # Função para realizar o login
 def login(driver, company_code, matricula, password):
@@ -41,7 +63,7 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando acessar o site...")
         driver.get("https://www.ahgora.com.br/novabatidaonline/")
         
-        driver.save_screenshot('página.png')
+        driver.save_screenshot('pagina.png')
         
         logging.info("Tentando clicar em 'Matrícula e senha'...")
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Matrícula e senha']"))).click()
@@ -57,7 +79,7 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando preencher a senha...")
         driver.find_element(By.ID, "outlined-password").send_keys(password)
         
-        driver.save_screenshot('matrica_senha_preenchidos.png')
+        driver.save_screenshot('matricula_senha_preenchidos.png')
         
         logging.info("Esperando carregar a página...")
         time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
@@ -131,13 +153,16 @@ def registrar_ponto(driver):
 
 # Chama a função para bater o ponto nos determinados horários registrados
 def bater_ponto():
+    driver = None
     try:
+        driver = get_driver(browser)
         login(driver, company_code, matricula, password)
         registrar_ponto(driver)
     except Exception as e:
         logging.error(f"Erro ao bater o ponto: {e}")
     finally:
-        driver.quit()
+        if driver:
+            driver.quit()
 
 # Executa a função
 bater_ponto()
