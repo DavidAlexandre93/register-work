@@ -60,21 +60,18 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Poetry and Dependencies') {
             steps {
                 script {
                     // Instalar o Poetry e as dependências do projeto
                     bat '''
                     if not exist "%APPDATA%\\Python\\Scripts\\poetry.exe" (
-                        pip install poetry
+                        python -m pip install --upgrade poetry
                         if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     )
-                    '''
-                    
-                    // Verificar se o arquivo pyproject.toml está presente e instalar dependências
-                    bat '''
+
                     if exist "pyproject.toml" (
-                        poetry install
+                        poetry install --no-root
                         if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     ) else (
                         echo "Arquivo pyproject.toml não encontrado!"
@@ -85,36 +82,44 @@ pipeline {
             }
         }
 
+        stage('Update Selenium and WebDriver Manager') {
+            steps {
+                script {
+                    // Atualizar as bibliotecas selenium e webdriver_manager
+                    bat '''
+                    poetry add --upgrade selenium
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+                    
+                    poetry add --upgrade webdriver-manager
+                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+                    '''
+                }
+            }
+        }
+
         stage('Setup WebDriver (Windows)') {
             steps {
                 script {
                     if (env.BROWSER == 'chrome') {
                         echo 'Configurando ChromeDriver...'
-                        // Código de configuração do ChromeDriver aqui (igual ao original)
-                        // ...
+                        // Usar script Python para baixar o ChromeDriver mais atualizado
+                        bat '''
+                        poetry run python -c "from webdriver_manager.chrome import ChromeDriverManager; ChromeDriverManager().install()"
+                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+                        '''
                     } else if (env.BROWSER == 'firefox') {
                         echo 'Configurando GeckoDriver...'
+                        // Usar script Python para baixar o GeckoDriver mais atualizado
                         bat '''
-                        set GECKODRIVER_VERSION=v0.31.0
-                        curl -O https://github.com/mozilla/geckodriver/releases/download/%GECKODRIVER_VERSION%/geckodriver-%GECKODRIVER_VERSION%-win64.zip
+                        poetry run python -c "from webdriver_manager.firefox import GeckoDriverManager; GeckoDriverManager().install()"
                         if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                        tar.exe -xf geckodriver-%GECKODRIVER_VERSION%-win64.zip
-                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                        move /Y geckodriver.exe C:\\Windows\\System32\\geckodriver.exe
-                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                        del geckodriver-%GECKODRIVER_VERSION%-win64.zip
                         '''
                     } else if (env.BROWSER == 'edge') {
                         echo 'Configurando EdgeDriver...'
+                        // Usar script Python para baixar o EdgeDriver mais atualizado
                         bat '''
-                        set EDGEDRIVER_VERSION=114.0.1823.67
-                        curl -O https://msedgedriver.azureedge.net/%EDGEDRIVER_VERSION%/edgedriver_win64.zip
+                        poetry run python -c "from webdriver_manager.microsoft import EdgeChromiumDriverManager; EdgeChromiumDriverManager().install()"
                         if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                        tar.exe -xf edgedriver_win64.zip
-                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                        move /Y msedgedriver.exe C:\\Windows\\System32\\msedgedriver.exe
-                        if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                        del edgedriver_win64.zip
                         '''
                     } else {
                         error('Navegador não suportado! Use "chrome", "firefox" ou "edge".')

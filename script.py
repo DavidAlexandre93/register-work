@@ -40,6 +40,7 @@ def get_driver(browser):
         chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--disable-extensions')
         chrome_options.add_argument('--disable-notifications')
+        # Utiliza o ChromeDriverManager para baixar e instalar a versão mais atualizada do ChromeDriver
         return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
     
     elif browser == "firefox":
