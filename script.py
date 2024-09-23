@@ -119,6 +119,15 @@ def login(driver, company_code, matricula, password):
         time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
         
         logging.info("Tentando clicar em 'Liberar dispositivo'...")
+        # Adicionar uma captura de tela antes de tentar clicar
+        driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'antes_de_liberar_dispositivo.png'))
+        
+        # Verificar se o elemento está presente antes de clicar
+        liberar_dispositivo_btn = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
+        )
+        logging.info("Botão 'Liberar dispositivo' encontrado, tentando clicar...")
+        
         WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
         ).click()
@@ -135,7 +144,7 @@ def registrar_ponto(driver):
         logging.info("Iniciando registro do ponto após o login inicial")
          
         # Usar o XPath atualizado para localizar o botão "Registre seu ponto"
-        register_button = WebDriverWait(driver, 20).until(
+        register_button = WebDriverWait(driver, 30).until(
             EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Registre seu ponto']]"))
         )
         register_button.click()
