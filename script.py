@@ -1,15 +1,16 @@
-import os
-import shutil
-import traceback
-from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager  # Certifique-se de que esta linha está presente
 import logging
+import os
+import traceback
 import time
+from datetime import datetime
+import shutil
 
 # Configurações de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -36,6 +37,12 @@ def limpar_screenshots():
 
 # Executa a limpeza das capturas de tela imediatamente ao iniciar o script
 limpar_screenshots()
+
+# Carregar dados sensíveis das variáveis de ambiente ou usar valores padrão para testes
+company_code = os.getenv("COMPANY_CODE", "a382748")
+matricula = os.getenv("MATRICULA", "305284")
+password = os.getenv("PASSWORD", "@Agmtech100r")
+browser = os.getenv("BROWSER", "chrome").lower()  # Seleciona o navegador a partir da variável de ambiente, padrão é "chrome"
 
 # Função para inicializar o WebDriver com base no navegador selecionado
 def get_driver(browser):
