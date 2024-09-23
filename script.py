@@ -31,32 +31,36 @@ sso_password = os.getenv("SSO_PASSWORD", "@Agmtech100r")
 
 # Função para inicializar o WebDriver com base no navegador selecionado
 def get_driver(browser):
-    if browser == "chrome":
-        logging.info("Inicializando o Chrome WebDriver...")
-        chrome_options = ChromeOptions()
-        # chrome_options.add_argument("--headless") # Usar se quiser rodar em modo headless
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-infobars')
-        chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--disable-notifications')
-        # Utiliza o ChromeDriverManager para baixar e instalar a versão mais atualizada do ChromeDriver
-        return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-    
-    elif browser == "firefox":
-        logging.info("Inicializando o Firefox WebDriver...")
-        firefox_options = FirefoxOptions()
-        # firefox_options.add_argument("--headless") # Usar se quiser rodar em modo headless
-        return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
-    
-    elif browser == "edge":
-        logging.info("Inicializando o Edge WebDriver...")
-        edge_options = EdgeOptions()
-        # edge_options.add_argument("--headless") # Usar se quiser rodar em modo headless
-        return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=edge_options)
-    
-    else:
-        raise ValueError(f"Navegador '{browser}' não suportado! Use 'chrome', 'firefox' ou 'edge'.")
+    try:
+        if browser == "chrome":
+            logging.info("Inicializando o Chrome WebDriver...")
+            chrome_options = ChromeOptions()
+            # chrome_options.add_argument("--headless") # Usar se quiser rodar em modo headless
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            chrome_options.add_argument('--disable-infobars')
+            chrome_options.add_argument('--disable-extensions')
+            chrome_options.add_argument('--disable-notifications')
+            # Utiliza o ChromeDriverManager para baixar e instalar a versão mais atualizada do ChromeDriver
+            return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+        
+        elif browser == "firefox":
+            logging.info("Inicializando o Firefox WebDriver...")
+            firefox_options = FirefoxOptions()
+            # firefox_options.add_argument("--headless") # Usar se quiser rodar em modo headless
+            return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
+        
+        elif browser == "edge":
+            logging.info("Inicializando o Edge WebDriver...")
+            edge_options = EdgeOptions()
+            # edge_options.add_argument("--headless") # Usar se quiser rodar em modo headless
+            return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=edge_options)
+        
+        else:
+            raise ValueError(f"Navegador '{browser}' não suportado! Use 'chrome', 'firefox' ou 'edge'.")
+    except Exception as e:
+        logging.error(f"Erro ao inicializar o WebDriver: {e.__cause__} - {e.args} - {e}")
+        raise
 
 # Função para realizar o login
 def login(driver, company_code, matricula, password):
@@ -93,6 +97,7 @@ def login(driver, company_code, matricula, password):
     except Exception as e:
         logging.error(f"Erro durante o login: {e}")
         driver.save_screenshot('erro_login.png')
+        logging.error(traceback.format_exc())  # Adiciona traceback detalhado ao log
         raise
 
 # Função para registrar o ponto
