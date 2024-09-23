@@ -59,7 +59,7 @@ def get_driver(browser):
         else:
             raise ValueError(f"Navegador '{browser}' não suportado! Use 'chrome', 'firefox' ou 'edge'.")
     except Exception as e:
-        logging.error(f"Erro ao inicializar o WebDriver: {e.__cause__} - {e.args} - {e}")
+        logging.error(f"Erro ao inicializar o WebDriver: {e} - {e.__cause__} - {e.args}")
         raise
 
 # Função para realizar o login
