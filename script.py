@@ -65,11 +65,12 @@ def get_driver(browser):
         raise
 
 # Função para realizar o login
+# Substituir o uso de 'time.sleep()' por 'WebDriverWait' para garantir a estabilidade
+
 def login(driver, company_code, matricula, password):
     try:
         logging.info("Tentando acessar o site...")
         driver.get("https://www.ahgora.com.br/novabatidaonline/")
-        
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'pagina.png'))
         
         logging.info("Tentando clicar em 'Matrícula e senha'...")
@@ -77,7 +78,6 @@ def login(driver, company_code, matricula, password):
         
         logging.info("Tentando preencher o código da empresa...")
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, "outlined-basic")))
-
         driver.find_elements(By.ID, "outlined-basic")[0].send_keys(company_code)
         
         logging.info("Tentando preencher a matrícula...")
@@ -89,46 +89,30 @@ def login(driver, company_code, matricula, password):
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'matricula_senha_preenchidos.png'))
         
         logging.info("Esperando carregar a página...")
-        time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
-        
-        logging.info("Tentando clicar em 'Liberar dispositivo'...")
-        driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'antes_de_liberar_dispositivo.png'))
-        
-        # Verificar se o elemento está presente e visível antes de clicar
+        # Substituindo time.sleep por espera explícita no botão de 'Liberar dispositivo'
         liberar_dispositivo_btn = WebDriverWait(driver, 30).until(
-            EC.visibility_of_element_located((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
+            EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
         )
-        
         logging.info("Botão 'Liberar dispositivo' encontrado, verificando se está habilitado...")
         
-        # Verificar se o botão está habilitado
         if liberar_dispositivo_btn.is_enabled():
-            logging.info("Botão 'Liberar dispositivo' está habilitado, tentando clicar...")
             liberar_dispositivo_btn.click()
+            logging.info("Clique no botão 'Liberar dispositivo' efetuado.")
         else:
             logging.warning("Botão 'Liberar dispositivo' não está habilitado. Tentando usar JavaScript para clicar.")
             driver.execute_script("arguments[0].click();", liberar_dispositivo_btn)
-        
-        logging.info("Clique no botão 'Liberar dispositivo' efetuado.")
-        
+            
     except Exception as e:
         logging.error(f"Erro durante o login: {e} - {e.__cause__} - {e.args}")
-        
-        # Capturar a tela e salvar o HTML da página para ajudar no debug
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'erro_login.png'))
-        
-        # Verifique se o diretório ainda existe e crie-o se necessário
         if not os.path.exists(CURRENT_RUN_DIR):
             os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
-        
-        # Salvar o HTML da página
         try:
             with open(os.path.join(CURRENT_RUN_DIR, 'pagina_erro.html'), 'w', encoding='utf-8') as f:
                 f.write(driver.page_source)
         except Exception as ex:
             logging.error(f"Erro ao salvar o HTML da página: {ex} - {ex.__cause__} - {ex.args}")
-        
-        logging.error(traceback.format_exc())  # Adiciona traceback detalhado ao log
+        logging.error(traceback.format_exc())
         raise
 
 # Função para registrar o ponto
