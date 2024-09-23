@@ -85,12 +85,9 @@ pipeline {
         stage('Update Selenium and WebDriver Manager') {
             steps {
                 script {
-                    // Atualizar as bibliotecas selenium e webdriver_manager
+                    // Atualizar todas as dependências no pyproject.toml
                     bat '''
-                    poetry add --upgrade selenium
-                    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-                    
-                    poetry add --upgrade webdriver-manager
+                    poetry update selenium webdriver-manager
                     if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
                     '''
                 }
