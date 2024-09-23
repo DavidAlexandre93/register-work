@@ -16,7 +16,6 @@ import logging
 import os
 import traceback
 from datetime import datetime
-import schedule
 import shutil
 
 # Configurações de logging
@@ -116,7 +115,6 @@ def login(driver, company_code, matricula, password):
         time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
         
         logging.info("Tentando clicar em 'Liberar dispositivo'...")
-        # Adicionar uma captura de tela antes de tentar clicar
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'antes_de_liberar_dispositivo.png'))
         
         # Verificar se o elemento está presente e visível antes de clicar
@@ -138,7 +136,12 @@ def login(driver, company_code, matricula, password):
         
     except Exception as e:
         logging.error(f"Erro durante o login: {e} - {e.__cause__} - {e.args}")
+        
+        # Capturar a tela e salvar o HTML da página para ajudar no debug
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'erro_login.png'))
+        with open(os.path.join(CURRENT_RUN_DIR, 'pagina_erro.html'), 'w', encoding='utf-8') as f:
+            f.write(driver.page_source)
+        
         logging.error(traceback.format_exc())  # Adiciona traceback detalhado ao log
         raise
 
@@ -186,10 +189,6 @@ def registrar_ponto(driver):
         
         # Verificar e clicar no botão "Registrar ponto"
         logging.info("Verificando se o botão 'Registrar ponto' está presente...")
-        # registrar_ponto_button = WebDriverWait(driver, 20).until(
-        #     EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Registrar ponto']]"))
-        # )
-        # registrar_ponto_button.click()
         
         logging.info("Ponto registrado com sucesso!")
         
@@ -214,4 +213,3 @@ def bater_ponto():
 
 # Executa a função
 bater_ponto()
-
