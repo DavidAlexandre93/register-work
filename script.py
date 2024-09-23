@@ -1,22 +1,15 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.edge.service import Service as EdgeService
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.edge.options import Options as EdgeOptions
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import logging
 import os
+import shutil
 import traceback
 from datetime import datetime
-import shutil
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import logging
+import time
 
 # Configurações de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 SCREENSHOT_DIR = os.path.join(os.getcwd(), 'screenshots')
 CURRENT_RUN_DIR = os.path.join(SCREENSHOT_DIR, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
-# Cria o diretório para a execução atual
+# Cria o diretório para a execução atual se não existir
 os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
 
 # Função para limpar capturas de tela
@@ -44,16 +37,6 @@ def limpar_screenshots():
 # Executa a limpeza das capturas de tela imediatamente ao iniciar o script
 limpar_screenshots()
 
-# Carregar dados sensíveis das variáveis de ambiente ou usar valores padrão para testes
-company_code = os.getenv("COMPANY_CODE", "a382748")
-matricula = os.getenv("MATRICULA", "305284")
-password = os.getenv("PASSWORD", "@Agmtech100r")
-browser = os.getenv("BROWSER", "chrome").lower()  # Seleciona o navegador a partir da variável de ambiente, padrão é "chrome"
-
-# Credenciais adicionais para o SSO
-sso_username = os.getenv("SSO_USERNAME", "305284")
-sso_password = os.getenv("SSO_PASSWORD", "@Agmtech100r")
-
 # Função para inicializar o WebDriver com base no navegador selecionado
 def get_driver(browser):
     try:
@@ -68,19 +51,6 @@ def get_driver(browser):
             chrome_options.add_argument('--disable-notifications')
             # Utiliza o ChromeDriverManager para baixar e instalar a versão mais atualizada do ChromeDriver
             return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-        
-        elif browser == "firefox":
-            logging.info("Inicializando o Firefox WebDriver...")
-            firefox_options = FirefoxOptions()
-            # firefox_options.add_argument("--headless") # Usar se quiser rodar em modo headless
-            return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
-        
-        elif browser == "edge":
-            logging.info("Inicializando o Edge WebDriver...")
-            edge_options = EdgeOptions()
-            # edge_options.add_argument("--headless") # Usar se quiser rodar em modo headless
-            return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=edge_options)
-        
         else:
             raise ValueError(f"Navegador '{browser}' não suportado! Use 'chrome', 'firefox' ou 'edge'.")
     except Exception as e:
@@ -139,8 +109,17 @@ def login(driver, company_code, matricula, password):
         
         # Capturar a tela e salvar o HTML da página para ajudar no debug
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'erro_login.png'))
-        with open(os.path.join(CURRENT_RUN_DIR, 'pagina_erro.html'), 'w', encoding='utf-8') as f:
-            f.write(driver.page_source)
+        
+        # Verifique se o diretório ainda existe e crie-o se necessário
+        if not os.path.exists(CURRENT_RUN_DIR):
+            os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
+        
+        # Salvar o HTML da página
+        try:
+            with open(os.path.join(CURRENT_RUN_DIR, 'pagina_erro.html'), 'w', encoding='utf-8') as f:
+                f.write(driver.page_source)
+        except Exception as ex:
+            logging.error(f"Erro ao salvar o HTML da página: {ex} - {ex.__cause__} - {ex.args}")
         
         logging.error(traceback.format_exc())  # Adiciona traceback detalhado ao log
         raise
@@ -202,7 +181,7 @@ def registrar_ponto(driver):
 def bater_ponto():
     driver = None
     try:
-        driver = get_driver(browser)
+        driver = get_driver("chrome")  # Certifique-se de que o valor do navegador é válido
         login(driver, company_code, matricula, password)
         registrar_ponto(driver)
     except Exception as e:
