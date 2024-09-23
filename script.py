@@ -131,26 +131,26 @@ def registrar_ponto(driver):
         # Aguardar um pouco antes de clicar para garantir que o botão esteja disponível
         time.sleep(5)
         
-        # Inserir as credenciais do SSO
+        # Inserir as credenciais
         logging.info("Tentando inserir a matrícula.")
-        sso_username_input = WebDriverWait(driver, 20).until(
+        username_input = WebDriverWait(driver, 20).until(
             EC.visibility_of_element_located((By.XPATH, "//input[@id='outlined-basic-account']"))
         )
-        sso_username_input.clear()
-        sso_username_input.send_keys(sso_username)
+        username_input.clear()
+        username_input.send_keys(username_input)
         
         logging.info("Tentando inserir a senha.")
-        sso_password_input = WebDriverWait(driver, 20).until(
+        password_input = WebDriverWait(driver, 20).until(
             EC.visibility_of_element_located((By.XPATH, "//input[@id='outlined-basic-password']"))
         )
-        sso_password_input.clear()
-        sso_password_input.send_keys(sso_password)
+        password_input.clear()
+        password_input.send_keys(password_input)
         
-        logging.info("Tentando clicar no botão 'Avançar'.")
-        sso_login_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Avançar']]"))
-        )
-        sso_login_button.click()
+        # logging.info("Tentando clicar no botão 'Avançar'.")
+        # login_button = WebDriverWait(driver, 20).until(
+        #     EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Avançar']]"))
+        # )
+        # login_button.click()
         
         logging.info("Login realizado com sucesso!")
 
