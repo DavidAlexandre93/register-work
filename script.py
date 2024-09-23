@@ -15,9 +15,35 @@ import time
 import logging
 import os
 import traceback
+from datetime import datetime
+import schedule
+import shutil
 
 # Configurações de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Configurações de diretório para capturas de tela
+SCREENSHOT_DIR = os.path.join(os.getcwd(), 'screenshots')
+CURRENT_RUN_DIR = os.path.join(SCREENSHOT_DIR, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+
+# Cria o diretório para a execução atual
+os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
+
+# Função para limpar capturas de tela
+def limpar_screenshots():
+    """Remove todos os arquivos do diretório de capturas de tela diariamente."""
+    try:
+        if os.path.exists(SCREENSHOT_DIR):
+            for filename in os.listdir(SCREENSHOT_DIR):
+                file_path = os.path.join(SCREENSHOT_DIR, filename)
+                if os.path.isfile(file_path) or os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            logging.info("Capturas de tela antigas removidas com sucesso.")
+    except Exception as e:
+        logging.error(f"Erro ao limpar capturas de tela: {e} - {e.__cause__} - {e.args}")
+
+# Agendar a limpeza diária à meia-noite
+schedule.every().day.at("00:00").do(limpar_screenshots)
 
 # Carregar dados sensíveis das variáveis de ambiente ou usar valores padrão para testes
 company_code = os.getenv("COMPANY_CODE", "a382748")
@@ -68,7 +94,7 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando acessar o site...")
         driver.get("https://www.ahgora.com.br/novabatidaonline/")
         
-        driver.save_screenshot('pagina.png')
+        driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'pagina.png'))
         
         logging.info("Tentando clicar em 'Matrícula e senha'...")
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Matrícula e senha']"))).click()
@@ -84,7 +110,7 @@ def login(driver, company_code, matricula, password):
         logging.info("Tentando preencher a senha...")
         driver.find_element(By.ID, "outlined-password").send_keys(password)
         
-        driver.save_screenshot('matricula_senha_preenchidos.png')
+        driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'matricula_senha_preenchidos.png'))
         
         logging.info("Esperando carregar a página...")
         time.sleep(5)  # Adiciona uma espera para garantir que tudo esteja carregado
@@ -95,8 +121,8 @@ def login(driver, company_code, matricula, password):
         ).click()
         
     except Exception as e:
-        logging.error(f"Erro durante o login: {e}")
-        driver.save_screenshot('erro_login.png')
+        logging.error(f"Erro durante o login: {e} - {e.args} - {e.__cause__}")
+        driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'erro_login.png'))
         logging.error(traceback.format_exc())  # Adiciona traceback detalhado ao log
         raise
 
@@ -152,9 +178,9 @@ def registrar_ponto(driver):
         logging.info("Ponto registrado com sucesso!")
         
     except Exception as e:
-        logging.error(f"Erro ao registrar o ponto: {e}")
+        logging.error(f"Erro ao registrar o ponto: {e} - {e.__cause__} - {e.args}")
         logging.error(traceback.format_exc())  # Adicionar traceback detalhado ao log
-        driver.save_screenshot('erro_ponto.png')  # Capturar screenshot do erro
+        driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'erro_ponto.png'))  # Capturar screenshot do erro
         raise
 
 # Chama a função para bater o ponto nos determinados horários registrados
@@ -165,10 +191,15 @@ def bater_ponto():
         login(driver, company_code, matricula, password)
         registrar_ponto(driver)
     except Exception as e:
-        logging.error(f"Erro ao bater o ponto: {e}")
+        logging.error(f"Erro ao bater o ponto: {e} - {e.args} - {e.__cause__}")
     finally:
         if driver:
             driver.quit()
 
 # Executa a função
 bater_ponto()
+
+# Executar o agendamento de tarefas
+while True:
+    schedule.run_pending()
+    time.sleep(1)
