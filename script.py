@@ -42,6 +42,9 @@ def limpar_screenshots():
     except Exception as e:
         logging.error(f"Erro ao limpar capturas de tela: {e} - {e.__cause__} - {e.args}")
 
+# Executa a limpeza das capturas de tela imediatamente ao iniciar o script
+limpar_screenshots()
+
 # Agendar a limpeza diária à meia-noite
 schedule.every().day.at("00:00").do(limpar_screenshots)
 
@@ -100,7 +103,7 @@ def login(driver, company_code, matricula, password):
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//p[text()='Matrícula e senha']"))).click()
         
         logging.info("Tentando preencher o código da empresa...")
-        WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.ID, "outlined-basic")))
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, "outlined-basic")))
 
         driver.find_elements(By.ID, "outlined-basic")[0].send_keys(company_code)
         
@@ -121,7 +124,7 @@ def login(driver, company_code, matricula, password):
         ).click()
         
     except Exception as e:
-        logging.error(f"Erro durante o login: {e} - {e.args} - {e.__cause__}")
+        logging.error(f"Erro durante o login: {e} - {e.__cause__} - {e.args}")
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'erro_login.png'))
         logging.error(traceback.format_exc())  # Adiciona traceback detalhado ao log
         raise
@@ -191,7 +194,7 @@ def bater_ponto():
         login(driver, company_code, matricula, password)
         registrar_ponto(driver)
     except Exception as e:
-        logging.error(f"Erro ao bater o ponto: {e} - {e.args} - {e.__cause__}")
+        logging.error(f"Erro ao bater o ponto: {e} - {e.__cause__} - {e.args}")
     finally:
         if driver:
             driver.quit()
@@ -199,7 +202,8 @@ def bater_ponto():
 # Executa a função
 bater_ponto()
 
-# Executar o agendamento de tarefas
+# Este loop é desnecessário se o script é executado por um agendador externo
+# Removê-lo se o script for executado apenas uma vez por agendamento
 while True:
     schedule.run_pending()
     time.sleep(1)
