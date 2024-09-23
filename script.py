@@ -45,9 +45,6 @@ def limpar_screenshots():
 # Executa a limpeza das capturas de tela imediatamente ao iniciar o script
 limpar_screenshots()
 
-# Agendar a limpeza diária à meia-noite
-schedule.every().day.at("00:00").do(limpar_screenshots)
-
 # Carregar dados sensíveis das variáveis de ambiente ou usar valores padrão para testes
 company_code = os.getenv("COMPANY_CODE", "a382748")
 matricula = os.getenv("MATRICULA", "305284")
@@ -122,15 +119,22 @@ def login(driver, company_code, matricula, password):
         # Adicionar uma captura de tela antes de tentar clicar
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'antes_de_liberar_dispositivo.png'))
         
-        # Verificar se o elemento está presente antes de clicar
+        # Verificar se o elemento está presente e visível antes de clicar
         liberar_dispositivo_btn = WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
+            EC.visibility_of_element_located((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
         )
-        logging.info("Botão 'Liberar dispositivo' encontrado, tentando clicar...")
         
-        WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[.//p[text()='Liberar dispositivo']]"))
-        ).click()
+        logging.info("Botão 'Liberar dispositivo' encontrado, verificando se está habilitado...")
+        
+        # Verificar se o botão está habilitado
+        if liberar_dispositivo_btn.is_enabled():
+            logging.info("Botão 'Liberar dispositivo' está habilitado, tentando clicar...")
+            liberar_dispositivo_btn.click()
+        else:
+            logging.warning("Botão 'Liberar dispositivo' não está habilitado. Tentando usar JavaScript para clicar.")
+            driver.execute_script("arguments[0].click();", liberar_dispositivo_btn)
+        
+        logging.info("Clique no botão 'Liberar dispositivo' efetuado.")
         
     except Exception as e:
         logging.error(f"Erro durante o login: {e} - {e.__cause__} - {e.args}")
@@ -211,8 +215,3 @@ def bater_ponto():
 # Executa a função
 bater_ponto()
 
-# Este loop é desnecessário se o script é executado por um agendador externo
-# Removê-lo se o script for executado apenas uma vez por agendamento
-while True:
-    schedule.run_pending()
-    time.sleep(1)
