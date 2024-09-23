@@ -20,7 +20,12 @@ SCREENSHOT_DIR = os.path.join(os.getcwd(), 'screenshots')
 CURRENT_RUN_DIR = os.path.join(SCREENSHOT_DIR, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
 # Cria o diretório para a execução atual se não existir
-os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
+try:
+    os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
+    logging.info(f"Diretório para capturas de tela criado: {CURRENT_RUN_DIR}")
+except Exception as e:
+    logging.error(f"Erro ao criar o diretório {CURRENT_RUN_DIR}: {e}")
+    raise
 
 # Função para limpar capturas de tela
 def limpar_screenshots():
@@ -71,6 +76,11 @@ def login(driver, company_code, matricula, password):
     try:
         logging.info("Tentando acessar o site...")
         driver.get("https://www.ahgora.com.br/novabatidaonline/")
+
+        # Verifica se o diretório para screenshots existe antes de salvar
+        if not os.path.exists(CURRENT_RUN_DIR):
+            os.makedirs(CURRENT_RUN_DIR, exist_ok=True)
+
         driver.save_screenshot(os.path.join(CURRENT_RUN_DIR, 'pagina.png'))
         
         logging.info("Tentando clicar em 'Matrícula e senha'...")
@@ -137,14 +147,14 @@ def registrar_ponto(driver):
             EC.visibility_of_element_located((By.XPATH, "//input[@id='outlined-basic-account']"))
         )
         username_input.clear()
-        username_input.send_keys(username_input)
+        username_input.send_keys(matricula)  # Corrigido para enviar a matrícula correta
         
         logging.info("Tentando inserir a senha.")
         password_input = WebDriverWait(driver, 20).until(
             EC.visibility_of_element_located((By.XPATH, "//input[@id='outlined-basic-password']"))
         )
         password_input.clear()
-        password_input.send_keys(password_input)
+        password_input.send_keys(password)  # Corrigido para enviar a senha correta
         
         # logging.info("Tentando clicar no botão 'Avançar'.")
         # login_button = WebDriverWait(driver, 20).until(
@@ -172,7 +182,7 @@ def registrar_ponto(driver):
 def bater_ponto():
     driver = None
     try:
-        driver = get_driver("chrome")  # Certifique-se de que o valor do navegador é válido
+        driver = get_driver(browser)  # Certifique-se de que o valor do navegador é válido
         login(driver, company_code, matricula, password)
         registrar_ponto(driver)
     except Exception as e:
